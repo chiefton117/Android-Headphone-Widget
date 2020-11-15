@@ -29,29 +29,7 @@ public class HeadphoneWidgetProvider extends android.appwidget.AppWidgetProvider
 
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(mBluetoothAdapter == null) {
-            Log.e("AppOut", "error: this device does not support bluetooth");
-            return;
-        }
-        if(!mBluetoothAdapter.isEnabled()) {
-            Log.e("AppOut", "error: bluetooth is not enabled");
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            //startActivityForResult(enableBtIntent, 1);
-            return;
-        }
-        String btName = getBTName(mBluetoothAdapter);
-        Log.i("AppOut", btName);
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
 
-        List<String> s = new ArrayList<String>();
-        for(BluetoothDevice bt : pairedDevices) {
-            Log.i("AppOut", bt.getBluetoothClass().toString());
-            s.add(bt.getName());
-            Log.i("AppOut", "Device: " + bt.getName());
-        }
-        BluetoothHeadset btHeadset;
-        //setListAdapter(new ArrayAdapter<String>(this, R.layout.list, s));
     }
     public String getBTName(BluetoothAdapter btAdapter) {
         String name = null;
