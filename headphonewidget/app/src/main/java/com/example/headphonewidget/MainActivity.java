@@ -19,6 +19,7 @@ import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,17 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static final UUID Battery_Level_UUID = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
 
 
-
-
-    private static final UUID uuid1 = UUID.fromString("8901dfa8-5c7e-4d8f-9f0c-c2b70683f5f0");
-    private static final UUID uuid2 = UUID.fromString("f8d1fbe4-7966-4334-8024-ff96c9330e15");
-    private static final UUID uuid3 = UUID.fromString("81c2e72a-0591-443e-a1ff-05f988593351");
-    private static final UUID uuid4 = UUID.fromString("931c7e8a-540f-4686-b798-e8df0a2ad9f7");
-    private static final UUID uuid5 = UUID.fromString("0000111e-0000-1000-8000-00805f9b34fb");
-    private static final UUID uuid6 = UUID.fromString("0000110b-0000-1000-8000-00805f9b34fb");
-    private static final UUID uuid7 = UUID.fromString("0000110e-0000-1000-8000-00805f9b34fb");
-    private static final UUID uuid8 = UUID.fromString("00000000-deca-fade-deca-deafdecacaff");
-    private static final UUID uuid9 = UUID.fromString("b9b213ce-eeab-49e4-8fd9-aa478ed1b26b");
+    public static final UUID uuid_one = UUID.fromString("96cc203e-5068-46ad-b32d-e316f5e069ba");
+    public static final UUID uuid_two = UUID.fromString("ba69e0f5-16e3-2db3-ad46-68503e20cc96");
 
 
     private static final UUID[] UUID_list = {
@@ -55,17 +47,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        setContentView(R.layout.headphone_widget);
+
+
+
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if(mBluetoothAdapter == null) {
             Log.e("AppOut", "error: this device does not support bluetooth");
@@ -79,32 +64,28 @@ public class MainActivity extends AppCompatActivity {
         }
         String btName = getBTName(mBluetoothAdapter);
         BluetoothDevice headset = null;
-        BluetoothHeadset btHeadset;
-        Log.i("AppOut", btName);
+
 
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-
-        List<String> s = new ArrayList<String>();
+        //mBluetoothAdapter.get
         for(BluetoothDevice bt : pairedDevices) {
             ParcelUuid[] uuids = bt.getUuids();
 
             if(uuids == null) continue;
-
             for(ParcelUuid uuid : uuids) {
-                Log.i("UUID: ", uuid.toString());
-                if(Arrays.asList(UUID_list).contains(uuid)) {
-                    Log.i("AppOut", "Headset found");
+                if(uuid.toString().equals(uuid_one.toString()) || uuid.toString().equals(uuid_two.toString())) {
                     headset = bt;
+                    break;
                 }
             }
             if(headset != null) {
                 Log.i("AppOut", "CONNECTED DEVICE : " + headset.getName());
                 break;
             }
-
-            s.add(bt.getName());
             Log.i("AppOut", "Device: " + bt.getName());
         }
+        TextView txt = findViewById(R.id.infodump);
+        txt.setText(headset.getName());
         //setListAdapter(new ArrayAdapter<String>(this, R.layout.list, s));
 
 
