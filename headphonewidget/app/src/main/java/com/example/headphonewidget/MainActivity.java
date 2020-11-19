@@ -1,10 +1,18 @@
 package com.example.headphonewidget;
 
+import android.bluetooth.*;
+/*
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothAssignedNumbers;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
+
+ */
 import android.bluetooth.BluetoothHeadset;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -27,7 +35,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static android.content.Intent.ACTION_HEADSET_PLUG;
+
 public class MainActivity extends AppCompatActivity {
+
+    public static final String ACTION_HF_INDICATORS_VALUE_CHANGED = "android.bluetooth.headset.action.HF_INDICATORS_VALUE_CHANGED";
+    private BroadcastReceiver receiver;
 
     private static final UUID Battery_Service_UUID = UUID.fromString("0000180F-0000-1000-8000-00805f9b34fb");
     private static final UUID Battery_Level_UUID = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
@@ -51,44 +64,35 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(mBluetoothAdapter == null) {
-            Log.e("AppOut", "error: this device does not support bluetooth");
-            return;
-        }
-        if(!mBluetoothAdapter.isEnabled()) {
-            Log.e("AppOut", "error: bluetooth is not enabled");
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            //startActivityForResult(enableBtIntent, 1);
-            return;
-        }
-        String btName = getBTName(mBluetoothAdapter);
-        BluetoothDevice headset = null;
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.bluetooth.device.action.BATTERY_LEVEL_CHANGED");
+        filter.addAction(ACTION_HF_INDICATORS_VALUE_CHANGED);
 
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        //mBluetoothAdapter.get
-        for(BluetoothDevice bt : pairedDevices) {
-            ParcelUuid[] uuids = bt.getUuids();
-
-            if(uuids == null) continue;
-            for(ParcelUuid uuid : uuids) {
-                if(uuid.toString().equals(uuid_one.toString()) || uuid.toString().equals(uuid_two.toString())) {
-                    headset = bt;
-                    break;
-                }
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                Log.i("BRECEIVER", action);
+                Bundle extras = intent.getExtras();
+                Log.i("BluetoothR 1", extras.toString());
+                int blevel = extras.getInt("android.bluetooth.device.extra.BATTERY_LEVEL");
+                Log.i("BluetoothR 2", Integer.toString(blevel));
+                int blextra = extras.getInt("android.bluetooth.device.extra.PREV_BATTERY_LEVEL");
+                Log.i("BluetoothR 3", Integer.toString(blextra));
             }
-            if(headset != null) {
-                Log.i("AppOut", "CONNECTED DEVICE : " + headset.getName());
-                break;
-            }
-            Log.i("AppOut", "Device: " + bt.getName());
+        };
+
+        registerReceiver(receiver, filter);
+
+    }
+    @Override
+    protected void onDestroy() {
+        if (receiver != null) {
+            unregisterReceiver(receiver);
+            receiver = null;
         }
-        TextView txt = findViewById(R.id.infodump);
-        txt.setText(headset.getName());
-        //setListAdapter(new ArrayAdapter<String>(this, R.layout.list, s));
-
-
+        super.onDestroy();
     }
     public void getBattery() {
         //BluetoothGattCharacteristic battery = mbluetoothadapter;

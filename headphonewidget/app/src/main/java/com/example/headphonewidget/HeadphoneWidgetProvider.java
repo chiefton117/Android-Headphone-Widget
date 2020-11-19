@@ -4,14 +4,21 @@ import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothAssignedNumbers;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothHeadset;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
+import android.os.Parcel;
 import android.os.ParcelUuid;
+import android.os.Parcelable;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.RemoteViews;
@@ -22,6 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import static android.bluetooth.BluetoothProfile.GATT;
+import static android.content.Context.BLUETOOTH_SERVICE;
 
 
 public class HeadphoneWidgetProvider extends android.appwidget.AppWidgetProvider {
@@ -40,39 +50,20 @@ public class HeadphoneWidgetProvider extends android.appwidget.AppWidgetProvider
 
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(mBluetoothAdapter == null) {
-            Log.e("AppOut", "error: this device does not support bluetooth");
-            return;
-        }
-        if(!mBluetoothAdapter.isEnabled()) {
-            Log.e("AppOut", "error: bluetooth is not enabled");
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            //startActivityForResult(enableBtIntent, 1);
-            return;
-        }
-        String btName = getBTName(mBluetoothAdapter);
-        BluetoothDevice headset = null;
+
+        /*
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            BluetoothManager manager = (BluetoothManager) context.getSystemService(BLUETOOTH_SERVICE);
+            List<BluetoothDevice> connected = manager.getConnectedDevices(GATT);
+            Log.i("AppOut", "Connected Device!!" + connected.get(0).getName()+"");
+        }*/
 
 
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        //mBluetoothAdapter.get
-        for(BluetoothDevice bt : pairedDevices) {
-            ParcelUuid[] uuids = bt.getUuids();
+        BluetoothDevice headset = getBTDevice();
 
-            if(uuids == null) continue;
-            for(ParcelUuid uuid : uuids) {
-                if(uuid.toString().equals(uuid_one.toString()) || uuid.toString().equals(uuid_two.toString())) {
-                    headset = bt;
-                    break;
-                }
-            }
-            if(headset != null) {
-                Log.i("AppOut", "CONNECTED DEVICE : " + headset.getName());
-                break;
-            }
-            Log.i("AppOut", "Device: " + bt.getName());
-        }
+
+
+
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.headphone_widget);
         views.setTextViewText(R.id.infodump, headset.getName());
@@ -81,6 +72,43 @@ public class HeadphoneWidgetProvider extends android.appwidget.AppWidgetProvider
         appWidgetManager.updateAppWidget(appWidgetIds, views);
 
 
+    }
+    private BluetoothDevice getBTDevice() {
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(mBluetoothAdapter == null) {
+            Log.e("AppOut", "error: this device does not support bluetooth");
+            return null;
+        }
+        if(!mBluetoothAdapter.isEnabled()) {
+            Log.e("AppOut", "error: bluetooth is not enabled");
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            //startActivityForResult(enableBtIntent, 1);
+            return null;
+        }
+
+        BluetoothDevice headset = null;
+
+
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+
+        for(BluetoothDevice bt : pairedDevices) {
+            ParcelUuid[] uuids = bt.getUuids();
+
+            if(uuids == null) continue;
+            for(ParcelUuid uuid : uuids) {
+                if(uuid.toString().equals(uuid_one.toString()) || uuid.toString().equals(uuid_two.toString())) {
+                    Log.i("Appout", uuid.toString());
+                    headset = bt;
+                    break;
+                }
+            }
+            if(headset != null) {
+                Log.i("AppOut", "CONNECTED DEVICE : " + headset.getName());
+                break;
+            }
+        }
+        return headset;
     }
     private PendingIntent getPendingSelfIntent(Context context, String action) {
         Intent intent = new Intent(context, getClass());
